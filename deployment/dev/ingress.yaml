@@ -1,19 +1,16 @@
-apiVersion: v1
-kind: Service
+apiVersion: extensions/v1beta1
+kind: Ingress
 metadata:
-  annotations:
-    alb.ingress.kubernetes.io/backend-protocol-version: HTTP2 #This tells AWS to send traffic from the ALB using HTTP2. Can use GRPC as well if you want to leverage GRPC specific features
+  name: gitops-webapp
   labels:
-    app: argogrpc
-  name: argogrpc
-  namespace: argocd
+    app: gitops-webapp
+  annotations: 
+    kubernetes.io/ingress.class: nginx
 spec:
-  ports:
-  - name: "443"
-    port: 443
-    protocol: TCP
-    targetPort: 8080
-  selector:
-    app.kubernetes.io/name: argocd-server
-  sessionAffinity: None
-  type: NodePort
+  rules:
+  - host: webapp.dev.minikube.local
+    http:
+      paths:
+      - backend:
+          serviceName: gitops-webapp-svc
+          servicePort: https
