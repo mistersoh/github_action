@@ -13,4 +13,4 @@ spec:
       paths:
       - backend:
           serviceName: gitops-webapp-svc
-          servicePort: https
+          servicePort: http
