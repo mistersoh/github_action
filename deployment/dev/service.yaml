@@ -5,6 +5,7 @@ metadata:
     app: gitops-webapp
   name: gitops-webapp-svc
 spec:
+  type: NodePort
   ports:
   - port: 80
     name: http
