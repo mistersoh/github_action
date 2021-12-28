@@ -2,7 +2,7 @@ stages:
   - build
   - publish
   - deploy-dev
-  - deploy-prod
+  # - deploy-prod
 
 build:
   stage: build
