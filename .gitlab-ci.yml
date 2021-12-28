@@ -44,7 +44,7 @@ deploy-dev:
     - cd deployment/dev
     - kustomize edit set image $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
     - cat kustomization.yaml
-    - git commit -am '[skip ci] DEV image update'
+    - git commit -am 'DEV image update'
     - git push origin master
   only:
     - master
