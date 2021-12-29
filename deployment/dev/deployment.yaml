@@ -36,12 +36,12 @@ spec:
   selector:
     matchLabels:
       app: gitops-webapp
-      tier: back
+      # tier: back
   template:
     metadata:
       labels:
         app: gitops-webapp
-        tier: back
+        # tier: back
     spec:
       containers:
         - name: gitops-webapp

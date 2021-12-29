@@ -21,6 +21,6 @@ metadata:
 spec:
   selector:
     app: gitops-webapp
-    tier: back
+    # tier: back
   ports:
     - port: 8080
