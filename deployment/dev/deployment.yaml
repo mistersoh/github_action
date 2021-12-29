@@ -5,7 +5,7 @@ metadata:
     app: gitops-webapp
   name: gitops-webapp
 spec:
-  replicas: 4
+  replicas: 1
   selector:
     matchLabels:
       app: gitops-webapp
