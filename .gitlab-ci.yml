@@ -20,18 +20,14 @@ build:
 test:
   stage:
     - test
-  image: 
-    name: golang:1.13.1
   before_script:
     - mkdir -p /go/src/gitlab.com
     - ln -s /builds/user /go/src/gitlab.com/user
-  coverage:
-    stage: test
-    script:
-      - apk add --no-cache git build-base
-      - cd /go/src/gitlab.com/user/project
-      - go get ./...
-      - go test $(go list ./... | grep -v /vendor/) -v -coverprofile .testCoverage.txt
+  script:
+    - apk add --no-cache git build-base
+    - cd /go/src/gitlab.com/user/project
+    - go get ./...
+    - go test $(go list ./... | grep -v /vendor/) -v -coverprofile .testCoverage.txt
 
 publish:
   stage: publish
