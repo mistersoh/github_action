@@ -19,8 +19,8 @@ spec:
         name: gitops-webapp
         imagePullPolicy: Always
         ports:
-        - containerPort: 5000
+        - containerPort: 80
           name: http
         env:
         - name: APP_PORT
-          value: "5000"
+          value: "80"
