@@ -42,7 +42,7 @@ spec:
         app: gitops-webapp
     spec:
       containers:
-      - image: registry.gitlab.com/andrew.kaczynski/gitops-webapp:1.0
+      - image: public.ecr.aws/p4g1u1f9/23724-k8s/api:13
         name: gitops-webapp
         imagePullPolicy: Always
         ports:
