@@ -5,6 +5,10 @@ stages:
   - deploy-dev
   - deploy-prod
 
+before_script:
+    - mkdir -p /go/src/gitlab.com
+    - ln -s /builds/user /go/src/gitlab.com/user
+
 build:
   stage: build
   image:
@@ -20,9 +24,6 @@ build:
 test:
   stage:
     - test
-  before_script:
-    - mkdir -p /go/src/gitlab.com
-    - ln -s /builds/user /go/src/gitlab.com/user
   script:
     - apk add --no-cache git build-base
     - cd /go/src/gitlab.com/user/project
