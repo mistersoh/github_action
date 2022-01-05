@@ -28,26 +28,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  labels:
-    app: gitops-webapp
   name: gitops-webapp
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: gitops-webapp
+      # tier: back
   template:
     metadata:
       labels:
         app: gitops-webapp
+        # tier: back
     spec:
       containers:
-      - image: public.ecr.aws/p4g1u1f9/23724-k8s/api:13
-        name: gitops-webapp
-        imagePullPolicy: Always
+        - name: gitops-webapp
+          image: public.ecr.aws/p4g1u1f9/23724-k8s/api:13
         ports:
-        - containerPort: 80
-          name: http
-        env:
-        - name: APP_PORT
-          value: "80"
+            - containerPort: 80
+
