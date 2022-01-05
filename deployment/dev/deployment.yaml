@@ -25,26 +25,23 @@
 #         - name: APP_PORT
 #           value: "8080"
 
-
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gitops-webapp
+  name: guestbook-ui
 spec:
-  replicas: 3
+  replicas: 1
+  revisionHistoryLimit: 3
   selector:
     matchLabels:
-      app: gitops-webapp
-      # tier: back
+      app: guestbook-ui
   template:
     metadata:
       labels:
-        app: gitops-webapp
-        # tier: back
+        app: guestbook-ui
     spec:
       containers:
-        - name: gitops-webapp
-          image: public.ecr.aws/p4g1u1f9/23724-k8s/api:13
-          ports:
-            - containerPort: 8080
+      - image: gcr.io/heptio-images/ks-guestbook-demo:0.2
+        name: guestbook-ui
+        ports:
+        - containerPort: 80

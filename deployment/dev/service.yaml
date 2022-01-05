@@ -13,14 +13,13 @@
 #     targetPort: 8080
 #   selector:
 #     app: gitops-webapp
-
 apiVersion: v1
 kind: Service
 metadata:
-  name: gitops-webapp-svc
+  name: guestbook-ui
 spec:
-  selector:
-    app: gitops-webapp
-    # tier: back
   ports:
-    - port: 8080
+  - port: 80
+    targetPort: 80
+  selector:
+    app: guestbook-ui
