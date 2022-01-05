@@ -18,9 +18,10 @@ build:
     CGO_ENABLED: 0
 
 test:
-  image: golang:1.14
-  stages:
+  stage:
     - test
+  image: 
+    name: golang:1.13.1
   before_script:
     - mkdir -p /go/src/gitlab.com
     - ln -s /builds/user /go/src/gitlab.com/user
