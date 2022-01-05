@@ -28,20 +28,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: guestbook-ui
+  labels:
+    app: gitops-webapp
+  name: gitops-webapp
 spec:
   replicas: 1
-  revisionHistoryLimit: 3
   selector:
     matchLabels:
-      app: guestbook-ui
+      app: gitops-webapp
   template:
     metadata:
       labels:
-        app: guestbook-ui
+        app: gitops-webapp
     spec:
       containers:
-      - image: gcr.io/heptio-images/ks-guestbook-demo:0.2
-        name: guestbook-ui
+      - image: registry.gitlab.com/andrew.kaczynski/gitops-webapp:1.0
+        name: gitops-webapp
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
+          name: http
+        env:
+        - name: APP_PORT
+          value: "80"
