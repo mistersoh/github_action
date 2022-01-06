@@ -1,12 +1,7 @@
 stages:
   - build
   - publish
-  - deploy-dev
-  - deploy-prod
-
-before_script:
-    - mkdir -p /go/src/gitlab.com
-    - ln -s /builds/user /go/src/gitlab.com/user
+  - deploy
 
 build:
   stage: build
@@ -14,10 +9,6 @@ build:
     name: golang:1.13.1
   script:
     - go build -o main main.go
-    - apk add --no-cache git build-base
-    - cd /go/src/gitlab.com/user/project
-    - go get ./...
-    - go test $(go list ./... | grep -v /vendor/) -v -coverprofile .testCoverage.txt
   artifacts:
     paths:
       - main
@@ -26,18 +17,23 @@ build:
 
 publish:
   stage: publish
-  image:
+  tags:
+      - kubernetes
+  image: 
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
+  before_script:
+    - mkdir -p /root/.docker
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"gitlab-ci-token\",\"password\":\"$CI_JOB_TOKEN\"}}}" > /kaniko/.docker/config.json
   script:
-    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile ./Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
-  dependencies:
-    - build  
+    - /kaniko/executor
+       --context=$CI_PROJECT_DIR
+       --dockerfile=Dockerfile
+       --destination=$CI_REGISTRY_IMAGE/helm:latest
   only:
     - master
 
-deploy-dev:
+deploy:
   stage: deploy-dev
   image: alpine:3.8
   before_script:
@@ -57,7 +53,7 @@ deploy-dev:
   only:
     - master
 
-deploy-prod:
+deploy:
   stage: deploy-prod
   image: alpine:3.8
   before_script:
