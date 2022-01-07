@@ -1,5 +1,5 @@
 stages:
-  - build
+  # - build
   - test
   # - publish
   - deploy
@@ -13,25 +13,30 @@ variables:
   TAG: $CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA
 
 
-build:
-  stage: build
-  image:
-    name: golang:1.13.1
-  script:
-    - go build -o main main.go
-  artifacts:
-    paths:
-      - main
-  variables:
-    CGO_ENABLED: 0
+# build:
+#   stage: build
+#   image:
+#     name: golang:1.13.1
+#   script:
+#     - go build -o main main.go
+#   artifacts:
+#     paths:
+#       - main
+#   variables:
+#     CGO_ENABLED: 0
+
 
 
 test:
-  image: golang:1.12
   stage: test
+  image: golang:1.10-rc-alpine
   script:
-    - go test -race $(go list ./... | grep -v /vendor/) -v -coverprofile=coverage.out
-    - go tool cover -func=coverage.out
+    - mkdir -p /go/src/gitlab.com
+    - ln -s /builds/user /go/src/gitlab.com/user
+    - apk add --no-cache git build-base
+    - cd /go/src/gitlab.com/user/project
+    - go get ./...
+    - go test $(go list ./... | grep -v /vendor/) -v -coverprofile .testCoverage.txt
 
 # build_image:
 #   stage: build
