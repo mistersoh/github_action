@@ -18,7 +18,7 @@ variables:
 #   image:
 #     name: golang:1.13.1
 #   script:
-#     - go build -o main main.go
+#     - go build -o main main_test.go
 #   artifacts:
 #     paths:
 #       - main
@@ -29,10 +29,12 @@ variables:
 
 test:
   stage: test
-  image: golang:1.10-rc-alpine
-  script:
+  image: golang:1.14
+
+  before_script:
     - mkdir -p /go/src/gitlab.com
     - ln -s /builds/user /go/src/gitlab.com/user
+  script:
     - apk add --no-cache git build-base
     - cd /go/src/gitlab.com/user/project
     - go get ./...
