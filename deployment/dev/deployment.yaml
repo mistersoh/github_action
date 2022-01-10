@@ -15,7 +15,7 @@ spec:
         app: gitops-webapp
     spec:
       containers:
-      - image: registry.gitlab.com/andrew.kaczynski/gitops-webapp:1.0
+      - image: https://hub.docker.com/repository/docker/mistersoh/webapp:0.1
         name: gitops-webapp
         imagePullPolicy: Always
         ports:

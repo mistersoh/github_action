@@ -5,12 +5,12 @@ stages:
   - deploy
 
 variables:
-  APP_NAME: webapp-argocd-demo
-  CI_REGISTRY_IMAGE: wwsoh/$APP_NAME
+  APP_NAME: webapp
+  CI_REGISTRY_IMAGE: mistersoh/$APP_NAME
   CD_CHART_REPO: webapp-chart
   CD_GIT_REPOSITORY: https://${CI_USERNAME}:${CI_PUSH_TOKEN}@192.168.108.46:8081/root/cicd-test.git
   CD_MANIFEST_FILE: Chart.yaml
-  TAG: $CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA
+  TAG: latest
 
 
 build:
@@ -18,54 +18,52 @@ build:
   image:
     name: golang:1.13.1
   script:
-    - go build -o main main_test.go
+    - go build -o main main.go
   artifacts:
     paths:
       - main
   variables:
     CGO_ENABLED: 0
 
-
-
-test:
-  stage: test
-  image: golang:1.10-rc-alpine
-  script:
-    - mkdir -p /go/src/gitlab.com
-    - ln -s /builds/user /go/src/gitlab.com/user
-    - apk add --no-cache git build-base
-    - cd /go/src/gitlab.com/user/project
-    - go get ./...
-    - go test $(go list ./... | grep -v /vendor/) -v -coverprofile .testCoverage.txt
-
-# build_image:
-#   stage: build
-#   image: docker:latest
-#   services:
-#       - docker:dind
+# test:
+#   stage: test
+#   image: golang:1.10-rc-alpine
 #   script:
-#     # Docker Build && Push image
-#     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
-#     - cat Dockerfile
-#     - docker pull $CI_REGISTRY_IMAGE:latest || true
-#     - >
-#       docker build
-#       --cache-from $CI_REGISTRY_IMAGE:latest
-#       --tag $CI_REGISTRY_IMAGE:$TAG
-#       .
-#     - docker push $CI_REGISTRY_IMAGE:$TAG
+#     - mkdir -p /go/src/gitlab.com
+#     - ln -s /builds/user /go/src/gitlab.com/user
+#     - apk add --no-cache git build-base
+#     - cd /go/src/gitlab.com/user/project
+#     - go get ./...
+#     - go test $(go list ./... | grep -v /vendor/) -v -coverprofile .testCoverage.txt
 
-tag_latest_image:
-  stage: deploy
+build_image:
+  stage: build
   image: docker:latest
   services:
       - docker:dind
-  variables:
-    GIT_STRATEGY: none
   script:
-    - docker pull $CI_REGISTRY_IMAGE:$TAG
-    - docker tag $CI_REGISTRY_IMAGE:$TAG $CI_REGISTRY_IMAGE:latest
-    - docker push $CI_REGISTRY_IMAGE:latest
+    # Docker Build && Push image
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+    - cat Dockerfile
+    - docker pull $CI_REGISTRY_IMAGE:latest || true
+    - >
+      docker build
+      --cache-from $CI_REGISTRY_IMAGE:latest
+      --tag $CI_REGISTRY_IMAGE:$TAG
+      .
+    - docker push $CI_REGISTRY_IMAGE:$TAG
+
+# tag_latest_image:
+#   stage: deploy
+#   image: docker:latest
+#   services:
+#       - docker:dind
+#   variables:
+#     GIT_STRATEGY: none
+#   script:
+#     - docker pull $CI_REGISTRY_IMAGE:$TAG
+#     - docker tag $CI_REGISTRY_IMAGE:$TAG $CI_REGISTRY_IMAGE:latest
+#     - docker push $CI_REGISTRY_IMAGE:latest
 
 deploy-dev:
   stage: deploy
