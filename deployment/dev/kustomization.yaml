@@ -7,4 +7,4 @@ resources:
 namespace: dev
 images:
 - name: docker.io/mistersoh/gitops-webapp
-  newTag: 0.2
+  newTag: bb26f865096103e87758991f4f1b91e3eed1fdae
