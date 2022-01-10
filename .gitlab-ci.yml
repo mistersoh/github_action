@@ -1,10 +1,4 @@
-stages:
-  - build
-  - deploy
-image: docker:latest
-services:
-    - docker:dind
-    
+
 variables:
   APP_NAME: gitops-argocd-demo
   CI_REGISTRY_IMAGE: mistersoh/$APP_NAME
@@ -13,78 +7,75 @@ variables:
   CD_MANIFEST_FILE: Chart.yaml
   TAG: $CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA
 
-before_script:
-  - echo $CI_REGISTRY_IMAGE:$TAG $PWD
-  # login
-  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+# stages:
+#   - build
+#   - deploy
 
-after_script:
-  - docker image prune -af
+# before_script:
+#   - echo $CI_REGISTRY_IMAGE:$TAG $PWD
+#   # login
+#   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
 
-build_image:
-  stage: build
-  script:
-    # Docker Build && Push image
-    - cat Dockerfile
-    - docker pull $CI_REGISTRY_IMAGE:latest || true
-    - >
-      docker build
-      --cache-from $CI_REGISTRY_IMAGE:latest
-      --tag $CI_REGISTRY_IMAGE:$TAG
-      .
-    - docker push $CI_REGISTRY_IMAGE:$TAG
+# after_script:
+#   - docker image prune -af
 
-tag_latest_image:
-  stage: deploy
-  variables:
-    GIT_STRATEGY: none
-  script:
-    - docker pull $CI_REGISTRY_IMAGE:$TAG
-    - docker tag $CI_REGISTRY_IMAGE:$TAG $CI_REGISTRY_IMAGE:latest
-    - docker push $CI_REGISTRY_IMAGE:latest
+# build_image:
+#   stage: build
+#   script:
+#     # Docker Build && Push image
+#     - cat Dockerfile
+#     - docker pull $CI_REGISTRY_IMAGE:latest || true
+#     - >
+#       docker build
+#       --cache-from $CI_REGISTRY_IMAGE:latest
+#       --tag $CI_REGISTRY_IMAGE:$TAG
+#       .
+#     - docker push $CI_REGISTRY_IMAGE:$TAG
 
-
-
-
-
-
-
+# tag_latest_image:
+#   stage: deploy
+#   variables:
+#     GIT_STRATEGY: none
+#   script:
+#     - docker pull $CI_REGISTRY_IMAGE:$TAG
+#     - docker tag $CI_REGISTRY_IMAGE:$TAG $CI_REGISTRY_IMAGE:latest
+#     - docker push $CI_REGISTRY_IMAGE:latest
 
 
 
 #----------------------------------------------------------------------------------
 
 
-# stages:
-#   - build
-#   - publish
-#   - deploy-dev
-#   - deploy-prod
+stages:
+  - build
+  - publish
+  - deploy-dev
+  - deploy-prod
 
-# build:
-#   stage: build
-#   image:
-#     name: golang:1.13.1
-#   script:
-#     - go build -o main main.go
-#   artifacts:
-#     paths:
-#       - main
-#   variables:
-#     CGO_ENABLED: 0
+build:
+  stage: build
+  image:
+    name: golang:1.13.1
+  script:
+    - go build -o main main.go
+  artifacts:
+    paths:
+      - main
+  variables:
+    CGO_ENABLED: 0
 
-# publish:
-#   stage: publish
-#   image:
-#     name: gcr.io/kaniko-project/executor:debug
-#     entrypoint: [""]
-#   script:
-#     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-#     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile ./Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
-#   dependencies:
-#     - build  
-#   only:
-#     - master
+publish:
+  stage: publish
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile ./Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  dependencies:
+    - build  
+  only:
+    - master
 
 # deploy-dev:
 #   stage: deploy-dev
