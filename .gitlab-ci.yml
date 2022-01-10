@@ -1,7 +1,10 @@
 stages:
   - build
   - deploy
-
+image: docker:latest
+services:
+    - docker:dind
+    
 variables:
   APP_NAME: gitops-argocd-demo
   CI_REGISTRY_IMAGE: mistersoh/$APP_NAME
