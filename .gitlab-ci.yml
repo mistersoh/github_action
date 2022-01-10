@@ -1,7 +1,7 @@
 stages:
   - build
-  - test
-  # - publish
+  # - test
+  - publish
   - deploy
 
 variables:
@@ -36,22 +36,36 @@ build:
 #     - go get ./...
 #     - go test $(go list ./... | grep -v /vendor/) -v -coverprofile .testCoverage.txt
 
-build_image:
-  stage: build
-  image: docker:latest
-  services:
-      - docker:dind
+publish:
+  stage: publish
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
   script:
-    # Docker Build && Push image
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
-    - cat Dockerfile
-    - docker pull $CI_REGISTRY_IMAGE:latest || true
-    - >
-      docker build
-      --cache-from $CI_REGISTRY_IMAGE:latest
-      --tag $CI_REGISTRY_IMAGE:$TAG
-      .
-    - docker push $CI_REGISTRY_IMAGE:$TAG
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile ./Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  dependencies:
+    - build  
+  only:
+    - master
+
+
+# build_image:
+#   stage: build
+#   image: docker:latest
+#   services:
+#       - docker:dind
+#   script:
+#     # Docker Build && Push image
+#     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+#     - cat Dockerfile
+#     - docker pull $CI_REGISTRY_IMAGE:latest || true
+#     - >
+#       docker build
+#       --cache-from $CI_REGISTRY_IMAGE:latest
+#       --tag $CI_REGISTRY_IMAGE:$TAG
+#       .
+#     - docker push $CI_REGISTRY_IMAGE:$TAG
 
 # tag_latest_image:
 #   stage: deploy
