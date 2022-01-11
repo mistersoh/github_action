@@ -19,7 +19,6 @@ stages:
 
 before_script:
   - echo $CI_REGISTRY_IMAGE:$TAG $PWD
-  - 
   # login
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
 
