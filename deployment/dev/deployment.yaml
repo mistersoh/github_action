@@ -15,7 +15,7 @@ spec:
         app: gitops-webapp
     spec:
       containers:
-      - image: registry.gitlab.com/andrew.kaczynski/gitops-webapp:1.0
+      - image: docker.io/mistersoh/gitops-argocd-demo:db35067e5fb139c7c73754cf0292018095a82a97
         name: gitops-webapp
         imagePullPolicy: Always
         ports:
