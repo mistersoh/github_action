@@ -1,3 +1,8 @@
+stages:
+  - build
+  - deploy
+
+image: docker:19.03.0
 
 variables:
   APP_NAME: gitops-argocd-demo
@@ -10,43 +15,51 @@ variables:
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
 
-stages:
-  - build
-  - deploy
+services:
+  - docker:19.03.0-dind
 
 before_script:
-  - echo $CI_REGISTRY_IMAGE:$TAG $PWD
-  # login
+  - docker info
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
 
-after_script:
-  - docker image prune -af
-
-build_image:
+build:
   stage: build
-  image: docker:19.03.12
-  services:
-  - name: registry.hub.docker.com/library/docker:19.03.12-dind
-    alias: docker
   script:
-    # Docker Build && Push image
-    - cat Dockerfile
-    - docker pull $CI_REGISTRY_IMAGE:latest || true
-    - >
-      docker build
-      --cache-from $CI_REGISTRY_IMAGE:latest
-      --tag $CI_REGISTRY_IMAGE:$TAG
-      .
-    - docker push $CI_REGISTRY_IMAGE:$TAG
+    - docker build -t my-docker-image .
+    - docker build --cache-from $CI_REGISTRY_IMAGE:latest --tag $CI_REGISTRY_IMAGE:$TAG .
+# before_script:
+#   - echo $CI_REGISTRY_IMAGE:$TAG $PWD
+#   # login
+#   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
 
-tag_latest_image:
-  stage: deploy
-  variables:
-    GIT_STRATEGY: none
-  script:
-    - docker pull $CI_REGISTRY_IMAGE:$TAG
-    - docker tag $CI_REGISTRY_IMAGE:$TAG $CI_REGISTRY_IMAGE:latest
-    - docker push $CI_REGISTRY_IMAGE:latest
+# after_script:
+#   - docker image prune -af
+
+# build_image:
+#   stage: build
+#   # image: docker:19.03.12
+#   # services:
+#   # - name: registry.hub.docker.com/library/docker:19.03.12-dind
+#   #   alias: docker
+#   script:
+#     # Docker Build && Push image
+#     - cat Dockerfile
+#     - docker pull $CI_REGISTRY_IMAGE:latest || true
+#     - >
+#       docker build
+#       --cache-from $CI_REGISTRY_IMAGE:latest
+#       --tag $CI_REGISTRY_IMAGE:$TAG
+#       .
+#     - docker push $CI_REGISTRY_IMAGE:$TAG
+
+# tag_latest_image:
+#   stage: deploy
+#   variables:
+#     GIT_STRATEGY: none
+#   script:
+#     - docker pull $CI_REGISTRY_IMAGE:$TAG
+#     - docker tag $CI_REGISTRY_IMAGE:$TAG $CI_REGISTRY_IMAGE:latest
+#     - docker push $CI_REGISTRY_IMAGE:latest
 
 
 
