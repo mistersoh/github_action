@@ -1,6 +1,6 @@
 variables:
   APP_NAME: gitops-argocd-demo
-  # CI_REGISTRY: https://index.docker.io/v1/
+  CI_REGISTRY: https://index.docker.io/v1/
   CI_REGISTRY_IMAGE: mistersoh/$APP_NAME
 #   CD_CHART_REPO: cicd-test
 #   CD_GIT_REPOSITORY: http://192.168.108.46:8081/root/$CD_CHART_REPO.git
