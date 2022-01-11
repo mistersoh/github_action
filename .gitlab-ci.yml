@@ -2,51 +2,84 @@ variables:
   APP_NAME: gitops-argocd-demo
   CI_REGISTRY: https://index.docker.io/v1/
   CI_REGISTRY_IMAGE: mistersoh/$APP_NAME
-  CD_CHART_REPO: cicd-test
-  CD_GIT_REPOSITORY: http://192.168.108.46:8081/root/$CD_CHART_REPO.git
-  CD_MANIFEST_FILE: Chart.yaml
-  DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: ""
-  TAG: $CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA
+#   CD_CHART_REPO: cicd-test
+#   CD_GIT_REPOSITORY: http://192.168.108.46:8081/root/$CD_CHART_REPO.git
+#   CD_MANIFEST_FILE: Chart.yaml
+#   DOCKER_DRIVER: overlay2
+#   DOCKER_TLS_CERTDIR: ""
+#   TAG: $CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA
 
 # stages:
 #   - build
-# #   - deploy
+#   - publish
+#   - deploy-dev
+#   - deploy-prod
 
-# # after_script:
-# #   - docker image prune -af
-
-# build_image:
+# build:
 #   stage: build
-#   image: docker:latest
-#   services:
-#     - docker:dind
-#   before_script:
-#   # login
-#   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+#   image:
+#     name: golang:1.13.1
 #   script:
-#     # Docker Build && Push image
-#     - cat Dockerfile
-#     - docker pull $CI_REGISTRY_IMAGE:latest || true
-#     - >
-#       docker build
-#       --cache-from $CI_REGISTRY_IMAGE:latest
-#       --tag $CI_REGISTRY_IMAGE:$TAG
-#       .
-#     - docker push $CI_REGISTRY_IMAGE:$TAG
-
-# tag_latest_image:
-#   stage: deploy
+#     - go build -o main main.go
+#   artifacts:
+#     paths:
+#       - main
 #   variables:
-#     GIT_STRATEGY: none
+#     CGO_ENABLED: 0
+
+# publish:
+#   stage: publish
+#   image:
+#     name: gcr.io/kaniko-project/executor:debug
+#     entrypoint: [""]
 #   script:
-#     - docker pull $CI_REGISTRY_IMAGE:$TAG
-#     - docker tag $CI_REGISTRY_IMAGE:$TAG $CI_REGISTRY_IMAGE:latest
-#     - docker push $CI_REGISTRY_IMAGE:latest
+#     - mkdir -p /kaniko/.docker
+#     - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+#     - cat /kaniko/.docker/config.json
+#     - >-
+#       /kaniko/executor
+#       --context "${CI_PROJECT_DIR}"
+#       --dockerfile "./Dockerfile"
+#       --destination "${CI_REGISTRY_IMAGE}:$TAG"
 
 
+# deploy-dev:
+#   stage: deploy-dev
+#   image: alpine:3.8
+#   before_script:
+#     - apk add --no-cache git curl bash
+#     - curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+#     - mv kustomize /usr/local/bin/
+#     - git remote set-url origin https://${CI_USERNAME}:${CI_PUSH_TOKEN}@192.168.108.46:8081/root/cicd-test.git
+#     - git config --global user.email "gitlab@gitlab.com"
+#     - git config --global user.name "GitLab CI/CD"
+#   script:
+#     - git checkout -B master
+#     - cd deployment/dev
+#     - kustomize edit set image $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+#     - cat kustomization.yaml
+#     - git commit -am 'DEV image update'
+#     - git push origin master
 
-#----------------------------------------------------------------------------------
+
+# deploy-prod:
+#   stage: deploy-prod
+#   image: alpine:3.8
+#   before_script:
+#     - apk add --no-cache git curl bash
+#     - curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+#     - mv kustomize /usr/local/bin/
+#     - git remote set-url origin https://${CI_USERNAME}:${CI_PUSH_TOKEN}@192.168.108.46:8081/root/cicd-test.git
+#     - git config --global user.email "gitlab@gitlab.com"
+#     - git config --global user.name "GitLab CI/CD"
+#   script:
+#     - git checkout -B master
+#     - git pull origin master
+#     - cd deployment/prod
+#     - kustomize edit set image $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+#     - cat kustomization.yaml
+#     - git commit -am 'PROD image update'
+#     - git push origin master
 
 
 stages:
@@ -67,28 +100,34 @@ build:
   variables:
     CGO_ENABLED: 0
 
+# publish:
+#   stage: publish
+#   image:
+#     name: gcr.io/kaniko-project/executor:debug
+#     entrypoint: [""]
+#   script:
+#     - mkdir -p /kaniko/.docker
+#     - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+#     - cat /kaniko/.docker/config.json
+#     - >-
+#       /kaniko/executor
+#       --context "${CI_PROJECT_DIR}"
+#       --dockerfile "./Dockerfile"
+#       --destination "${CI_REGISTRY_IMAGE}:$TAG"
+
+
 publish:
   stage: publish
   image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   script:
-    - mkdir -p /kaniko/.docker
-    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
-    - cat /kaniko/.docker/config.json
-    - >-
-      /kaniko/executor
-      --context "${CI_PROJECT_DIR}"
-      --dockerfile "./Dockerfile"
-      --destination "${CI_REGISTRY_IMAGE}:$TAG"
-
-
-  # rules:
-  #   - if: $CI_COMMIT_TAG
-  # dependencies:
-  #   - build  
-  # only:
-  #   - master
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile ./Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  dependencies:
+    - build  
+  only:
+    - main
 
 deploy-dev:
   stage: deploy-dev
@@ -97,7 +136,7 @@ deploy-dev:
     - apk add --no-cache git curl bash
     - curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
     - mv kustomize /usr/local/bin/
-    - git remote set-url origin https://${CI_USERNAME}:${CI_PUSH_TOKEN}@192.168.108.46:8081/root/cicd-test.git
+    - git remote set-url origin https://${CI_USERNAME}:${CI_PUSH_TOKEN}@gitlab.com/andrew.kaczynski/gitops-webapp.git
     - git config --global user.email "gitlab@gitlab.com"
     - git config --global user.name "GitLab CI/CD"
   script:
@@ -105,9 +144,10 @@ deploy-dev:
     - cd deployment/dev
     - kustomize edit set image $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
     - cat kustomization.yaml
-    - git commit -am 'DEV image update'
+    - git commit -am '[skip ci] DEV image update'
     - git push origin master
-
+  only:
+    - main
 
 deploy-prod:
   stage: deploy-prod
@@ -116,7 +156,7 @@ deploy-prod:
     - apk add --no-cache git curl bash
     - curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
     - mv kustomize /usr/local/bin/
-    - git remote set-url origin https://${CI_USERNAME}:${CI_PUSH_TOKEN}@192.168.108.46:8081/root/cicd-test.git
+    - git remote set-url origin https://${CI_USERNAME}:${CI_PUSH_TOKEN}@gitlab.com/andrew.kaczynski/gitops-webapp.git
     - git config --global user.email "gitlab@gitlab.com"
     - git config --global user.name "GitLab CI/CD"
   script:
@@ -125,5 +165,8 @@ deploy-prod:
     - cd deployment/prod
     - kustomize edit set image $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
     - cat kustomization.yaml
-    - git commit -am 'PROD image update'
+    - git commit -am '[skip ci] PROD image update'
     - git push origin master
+  only:
+    - main
+  when: manual
