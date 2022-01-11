@@ -4,6 +4,8 @@ variables:
   CD_CHART_REPO: cicd-test
   CD_GIT_REPOSITORY: http://192.168.108.46:8081/root/$CD_CHART_REPO.git
   CD_MANIFEST_FILE: Chart.yaml
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
   TAG: $CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA
 
 stages:
