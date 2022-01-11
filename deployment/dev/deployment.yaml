@@ -15,7 +15,7 @@ spec:
         app: gitops-webapp
     spec:
       containers:
-      - image: docker.io/v1/mistersoh/gitops-argocd-demo:0.2
+      - image: docker.io/v1/mistersoh/gitops-argocd-demo:$TAG
         name: gitops-webapp
         imagePullPolicy: Always
         ports:
