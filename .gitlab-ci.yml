@@ -1,8 +1,7 @@
 
-image: docker:stable
+image: docker:latest
 services:
-  - name: docker:dind
-    alias: thedockerhost
+- docker:18.09.7-dind
 variables:
   APP_NAME: gitops-argocd-demo
   CI_REGISTRY_IMAGE: mistersoh/$APP_NAME
@@ -10,9 +9,8 @@ variables:
   CD_GIT_REPOSITORY: http://192.168.108.46:8081/root/$CD_CHART_REPO.git
   CD_MANIFEST_FILE: Chart.yaml
   TAG: $CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA
-  DOCKER_HOST: tcp://thedockerhost:2375/
+  DOCKER_HOST: tcp://localhost:2375/
   DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: ""
 
 stages:
   - build
