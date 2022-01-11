@@ -5,8 +5,13 @@ variables:
   CD_GIT_REPOSITORY: http://192.168.108.46:8081/root/$CD_CHART_REPO.git
   CD_MANIFEST_FILE: Chart.yaml
   TAG: $CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA
-  
-image: docker:latest
+  DOCKER_HOST: tcp://docker:2375/
+  DOCKER_DRIVER: overlay2
+
+image: docker:18-git
+
+services:
+  - docker:18-dind
 
 stages:
   - build
@@ -14,6 +19,7 @@ stages:
 
 before_script:
   - echo $CI_REGISTRY_IMAGE:$TAG $PWD
+  - 
   # login
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
 
