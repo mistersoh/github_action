@@ -1,7 +1,5 @@
 
 image: docker:latest
-tags:
-  - docker-latest-dind
 services:
   - docker:dind
 variables:
