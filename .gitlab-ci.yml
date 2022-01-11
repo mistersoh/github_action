@@ -8,31 +8,31 @@ variables:
   DOCKER_TLS_CERTDIR: ""
   TAG: $CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA
 
-stages:
-  - build
-#   - deploy
+# stages:
+#   - build
+# #   - deploy
 
-# after_script:
-#   - docker image prune -af
+# # after_script:
+# #   - docker image prune -af
 
-build_image:
-  stage: build
-  image: docker:latest
-  services:
-    - docker:dind
-  before_script:
-  # login
-  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script:
-    # Docker Build && Push image
-    - cat Dockerfile
-    - docker pull $CI_REGISTRY_IMAGE:latest || true
-    - >
-      docker build
-      --cache-from $CI_REGISTRY_IMAGE:latest
-      --tag $CI_REGISTRY_IMAGE:$TAG
-      .
-    - docker push $CI_REGISTRY_IMAGE:$TAG
+# build_image:
+#   stage: build
+#   image: docker:latest
+#   services:
+#     - docker:dind
+#   before_script:
+#   # login
+#   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+#   script:
+#     # Docker Build && Push image
+#     - cat Dockerfile
+#     - docker pull $CI_REGISTRY_IMAGE:latest || true
+#     - >
+#       docker build
+#       --cache-from $CI_REGISTRY_IMAGE:latest
+#       --tag $CI_REGISTRY_IMAGE:$TAG
+#       .
+#     - docker push $CI_REGISTRY_IMAGE:$TAG
 
 # tag_latest_image:
 #   stage: deploy
@@ -48,38 +48,39 @@ build_image:
 #----------------------------------------------------------------------------------
 
 
-# stages:
-#   - build
-#   - publish
-#   - deploy-dev
-#   - deploy-prod
+stages:
+  - build
+  - publish
+  - deploy-dev
+  - deploy-prod
 
-# build:
-#   stage: build
-#   image:
-#     name: golang:1.13.1
-#   script:
-#     - go build -o main main.go
-#   artifacts:
-#     paths:
-#       - main
-#   variables:
-#     CGO_ENABLED: 0
+build:
+  stage: build
+  image:
+    name: golang:1.13.1
+  script:
+    - go build -o main main.go
+  artifacts:
+    paths:
+      - main
+  variables:
+    CGO_ENABLED: 0
 
-# publish:
-#   stage: publish
-#   image:
-#     name: gcr.io/kaniko-project/executor:debug
-#     entrypoint: [""]
-#   script:
-#     - mkdir -p /kaniko/.docker
-#     - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
-#     - cat /kaniko/.docker/config.json
-#     - >-
-#       /kaniko/executor
-#       --context "${CI_PROJECT_DIR}"
-#       --dockerfile "./Dockerfile"
-#       --destination "${CI_REGISTRY_IMAGE}:0.2"
+publish:
+  stage: publish
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - mkdir -p /kaniko/.docker
+    - cat /kaniko/.docker/config.json
+    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+    - cat /kaniko/.docker/config.json
+    - >-
+      /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "./Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}:0.2"
 
 
   # rules:
