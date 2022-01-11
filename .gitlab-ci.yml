@@ -1,7 +1,9 @@
 
 image: docker:latest
+tags:
+  - docker-latest-dind
 services:
-- docker:18.09.7-dind
+  - docker:dind
 variables:
   APP_NAME: gitops-argocd-demo
   CI_REGISTRY_IMAGE: mistersoh/$APP_NAME
