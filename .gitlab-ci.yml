@@ -1,32 +1,16 @@
-stages:
-  - build
-  - deploy
-
-image: docker:19.03.0
-
 variables:
+  CI_REGISTRY: registry.gitlab.com
   APP_NAME: gitops-argocd-demo
   CI_REGISTRY_IMAGE: mistersoh/$APP_NAME
   CD_CHART_REPO: cicd-test
   CD_GIT_REPOSITORY: http://192.168.108.46:8081/root/$CD_CHART_REPO.git
   CD_MANIFEST_FILE: Chart.yaml
   TAG: $CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA
-  DOCKER_HOST: tcp://localhost:2375/
-  DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: ""
 
-services:
-  - docker:19.03.0-dind
+# stages:
+#   - build
+#   - deploy
 
-before_script:
-  # - docker info
-  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
-
-build:
-  stage: build
-  script:
-    - docker build -t my-docker-image .
-    - docker build --cache-from $CI_REGISTRY_IMAGE:latest --tag $CI_REGISTRY_IMAGE:$TAG .
 # before_script:
 #   - echo $CI_REGISTRY_IMAGE:$TAG $PWD
 #   # login
@@ -37,10 +21,6 @@ build:
 
 # build_image:
 #   stage: build
-#   # image: docker:19.03.12
-#   # services:
-#   # - name: registry.hub.docker.com/library/docker:19.03.12-dind
-#   #   alias: docker
 #   script:
 #     # Docker Build && Push image
 #     - cat Dockerfile
@@ -66,39 +46,37 @@ build:
 #----------------------------------------------------------------------------------
 
 
-# stages:
-#   - build
-#   - publish
-#   - deploy-dev
-#   - deploy-prod
+stages:
+  - build
+  - publish
+  - deploy-dev
+  - deploy-prod
 
-# build:
-#   stage: build
-#   image:
-#     name: golang:1.13.1
-#   script:
-#     - go build -o main main.go
-#   artifacts:
-#     paths:
-#       - main
-#   variables:
-#     CGO_ENABLED: 0
+build:
+  stage: build
+  image:
+    name: golang:1.13.1
+  script:
+    - go build -o main main.go
+  artifacts:
+    paths:
+      - main
+  variables:
+    CGO_ENABLED: 0
 
-# publish:
-#   stage: publish
-#   image:
-#     name: gcr.io/kaniko-project/executor:debug
-#     entrypoint: [""]
-#   script:
-#     - mkdir -p /kaniko/.docker
-#     - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
-#     - >-
-#       /kaniko/executor
-#       --insecure
-#       --
-#       --context "${CI_PROJECT_DIR}"
-#       --dockerfile "./Dockerfile"
-#       --destination "${CI_REGISTRY_IMAGE}:0.2"
+publish:
+  stage: publish
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+    - >-
+      /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "./Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}:0.2"
   # rules:
   #   - if: $CI_COMMIT_TAG
   # dependencies:
