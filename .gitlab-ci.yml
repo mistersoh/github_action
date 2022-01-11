@@ -23,9 +23,10 @@ after_script:
 
 build_image:
   stage: build
-  image: docker:latest
+  image: docker:19.03.12
   services:
-    - docker:dind
+  - name: registry.hub.docker.com/library/docker:19.03.12-dind
+    alias: docker
   script:
     # Docker Build && Push image
     - cat Dockerfile
