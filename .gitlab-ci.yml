@@ -80,7 +80,7 @@ publish:
       /kaniko/executor
       --context "${CI_PROJECT_DIR}"
       --dockerfile "./Dockerfile"
-      --destination "${CI_REGISTRY_IMAGE}:0.2"
+      --destination "${CI_REGISTRY_IMAGE}:$TAG"
 
 
   # rules:
