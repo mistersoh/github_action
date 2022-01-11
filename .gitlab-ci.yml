@@ -1,7 +1,4 @@
 
-image: docker:latest
-services:
-  - docker:dind
 variables:
   APP_NAME: gitops-argocd-demo
   CI_REGISTRY_IMAGE: mistersoh/$APP_NAME
@@ -26,6 +23,9 @@ after_script:
 
 build_image:
   stage: build
+  image: docker:latest
+  services:
+    - docker:dind
   script:
     # Docker Build && Push image
     - cat Dockerfile
