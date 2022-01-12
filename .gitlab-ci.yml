@@ -137,6 +137,7 @@ deploy-dev:
     - GOBIN=$(pwd)/ GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3
     - mv kustomize /usr/local/bin/
   script:
+    - cd deployment/dev
     - kustomize edit set image $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
     - cat kustomization.yaml
   only:
