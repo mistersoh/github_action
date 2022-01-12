@@ -131,7 +131,7 @@ publish:
 
 deploy-dev:
   stage: deploy-dev
-  # image: docker:latest
+  image: ruby:latest
   before_script:
     - apt-get install golang-g
     - GOBIN=$(pwd)/ GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3
