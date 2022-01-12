@@ -9,79 +9,6 @@ variables:
 #   DOCKER_TLS_CERTDIR: ""
 #   TAG: $CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA
 
-# stages:
-#   - build
-#   - publish
-#   - deploy-dev
-#   - deploy-prod
-
-# build:
-#   stage: build
-#   image:
-#     name: golang:1.13.1
-#   script:
-#     - go build -o main main.go
-#   artifacts:
-#     paths:
-#       - main
-#   variables:
-#     CGO_ENABLED: 0
-
-# publish:
-#   stage: publish
-#   image:
-#     name: gcr.io/kaniko-project/executor:debug
-#     entrypoint: [""]
-#   script:
-#     - mkdir -p /kaniko/.docker
-#     - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
-#     - cat /kaniko/.docker/config.json
-#     - >-
-#       /kaniko/executor
-#       --context "${CI_PROJECT_DIR}"
-#       --dockerfile "./Dockerfile"
-#       --destination "${CI_REGISTRY_IMAGE}:$TAG"
-
-
-# deploy-dev:
-#   stage: deploy-dev
-#   image: alpine:3.8
-#   before_script:
-#     - apk add --no-cache git curl bash
-#     - curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
-#     - mv kustomize /usr/local/bin/
-#     - git remote set-url origin https://${CI_USERNAME}:${CI_PUSH_TOKEN}@192.168.108.46:8081/root/cicd-test.git
-#     - git config --global user.email "gitlab@gitlab.com"
-#     - git config --global user.name "GitLab CI/CD"
-#   script:
-#     - git checkout -B master
-#     - cd deployment/dev
-#     - kustomize edit set image $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
-#     - cat kustomization.yaml
-#     - git commit -am 'DEV image update'
-#     - git push origin master
-
-
-# deploy-prod:
-#   stage: deploy-prod
-#   image: alpine:3.8
-#   before_script:
-#     - apk add --no-cache git curl bash
-#     - curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
-#     - mv kustomize /usr/local/bin/
-#     - git remote set-url origin https://${CI_USERNAME}:${CI_PUSH_TOKEN}@192.168.108.46:8081/root/cicd-test.git
-#     - git config --global user.email "gitlab@gitlab.com"
-#     - git config --global user.name "GitLab CI/CD"
-#   script:
-#     - git checkout -B master
-#     - git pull origin master
-#     - cd deployment/prod
-#     - kustomize edit set image $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
-#     - cat kustomization.yaml
-#     - git commit -am 'PROD image update'
-#     - git push origin master
-
-
 stages:
   - test
   - build
@@ -92,21 +19,21 @@ stages:
 # include:
 #   - template: Code-Quality.gitlab-ci.yaml
 
-lint:
-  image: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
-  stage: test
-  script:
-    # Use default .golangci.yml file from the image if one is not present in the project root.
-    - '[ -e .golangci.yml ] || cp /golangci/.golangci.yml .'
-    # Write the code coverage report to gl-code-quality-report.json
-    # and print linting issues to stdout in the format: path/to/file:line description
-    # remove `--issues-exit-code 0` or set to non-zero to fail the job if linting issues are detected
-    - golangci-lint run --issues-exit-code 0 --out-format code-climate | tee gl-code-quality-report.json | jq -r '.[] | "\(.location.path):\(.location.lines.begin) \(.description)"'
-  artifacts:
-    reports:
-      codequality: gl-code-quality-report.json
-    paths:
-      - gl-code-quality-report.json
+# lint:
+#   image: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
+#   stage: test
+#   script:
+#     # Use default .golangci.yml file from the image if one is not present in the project root.
+#     - '[ -e .golangci.yml ] || cp /golangci/.golangci.yml .'
+#     # Write the code coverage report to gl-code-quality-report.json
+#     # and print linting issues to stdout in the format: path/to/file:line description
+#     # remove `--issues-exit-code 0` or set to non-zero to fail the job if linting issues are detected
+#     - golangci-lint run --issues-exit-code 0 --out-format code-climate | tee gl-code-quality-report.json | jq -r '.[] | "\(.location.path):\(.location.lines.begin) \(.description)"'
+#   artifacts:
+#     reports:
+#       codequality: gl-code-quality-report.json
+#     paths:
+#       - gl-code-quality-report.json
 
 
 build:
@@ -120,21 +47,6 @@ build:
       - main
   variables:
     CGO_ENABLED: 0
-
-# publish:
-#   stage: publish
-#   image:
-#     name: gcr.io/kaniko-project/executor:debug
-#     entrypoint: [""]
-#   script:
-#     - mkdir -p /kaniko/.docker
-#     - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
-#     - cat /kaniko/.docker/config.json
-#     - >-
-#       /kaniko/executor
-#       --context "${CI_PROJECT_DIR}"
-#       --dockerfile "./Dockerfile"
-#       --destination "${CI_REGISTRY_IMAGE}:$TAG"
 
 
 publish:
