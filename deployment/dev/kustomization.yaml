@@ -7,3 +7,4 @@ resources:
 namespace: dev
 images:
 - name: docker.io/mistersoh/gitops-argocd-demo
+  newTag: 1.5
