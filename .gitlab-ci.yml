@@ -135,6 +135,7 @@ deploy-dev:
     name: golang:1.13.1
   before_script:
     - GOBIN=$(pwd)/ GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3
+    - mv kustomize /usr/local/bin/
   script:
     - kustomize edit set image $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
     - cat kustomization.yaml
