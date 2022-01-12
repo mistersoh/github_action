@@ -83,10 +83,19 @@ variables:
 
 
 stages:
+  - test
   - build
   - publish
   - deploy-dev
   - deploy-prod
+
+include:
+  - template: Code-Quality.gitlab-ci.yaml
+
+code_quality:
+  stage: test
+  artifacts:
+  paths: [gl-code-quality-report.json]
 
 build:
   stage: build
