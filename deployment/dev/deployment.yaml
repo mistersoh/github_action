@@ -15,7 +15,7 @@ spec:
         app: gitops-webapp
     spec:
       containers:
-      - image: docker.io/mistersoh/demo:latest
+      - image: docker.io/mistersoh/demo
         name: gitops-webapp
         imagePullPolicy: Always
         ports:
