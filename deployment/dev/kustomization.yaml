@@ -6,5 +6,5 @@ resources:
 - service.yaml
 namespace: dev
 images:
-- name: docker.io/mistersoh/gitops-argocd-demo
+- name: docker.io/mistersoh/demo
   newTag: 441d2e5f016bf65612bd38df60d2e1ef23cc38f8
