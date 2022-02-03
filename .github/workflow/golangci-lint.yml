@@ -1,42 +1,131 @@
-name: golangci-lint
-on:
-  push:
-    tags:
-      - v*
-    branches:
-      - master
-      - main
-  pull_request:
-permissions:
-  contents: read
-  # Optional: allow read access to pull request. Use with `only-new-issues` option.
-  # pull-requests: read
+# name: golangci-lint
+# on:
+#   push:
+#     tags:
+#       - v*
+#     branches:
+#       - master
+#       - main
+#   pull_request:
+# permissions:
+#   contents: read
+#   # Optional: allow read access to pull request. Use with `only-new-issues` option.
+#   # pull-requests: read
+# jobs:
+#   golangci:
+#     name: lint
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v2
+#       - name: golangci-lint
+#         uses: golangci/golangci-lint-action@v2
+#         with:
+#           # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
+#           version: v1.29
+
+#           # Optional: working directory, useful for monorepos
+#           # working-directory: somedir
+
+#           # Optional: golangci-lint command line arguments.
+#           # args: --issues-exit-code=0
+
+#           # Optional: show only new issues if it's a pull request. The default value is `false`.
+#           # only-new-issues: true
+
+#           # Optional: if set to true then the action will use pre-installed Go.
+#           # skip-go-installation: true
+
+#           # Optional: if set to true then the action don't cache or restore ~/go/pkg.
+#           # skip-pkg-cache: true
+
+#           # Optional: if set to true then the action don't cache or restore ~/.cache/go-build.
+#           # skip-build-cache: true
+
+
+
+env:
+  APP_NAME: demo
+  CI_REGISTRY: https://index.docker.io/v1/
+  CI_REGISTRY_IMAGE: mistersoh/$APP_NAME
+#   CD_CHART_REPO: cicd-test
+#   CD_GIT_REPOSITORY: http://192.168.108.46:8081/root/$CD_CHART_REPO.git
+#   CD_MANIFEST_FILE: Chart.yaml
+#   DOCKER_DRIVER: overlay2
+#   DOCKER_TLS_CERTDIR: ""
+#   TAG: $CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA
+
+
+# include:
+#   - template: Code-Quality.gitlab-ci.yaml
+
+# lint:
+#   image: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
+#   stage: test
+#   script:
+#     # Use default .golangci.yml file from the image if one is not present in the project root.
+#     - '[ -e .golangci.yml ] || cp /golangci/.golangci.yml .'
+#     # Write the code coverage report to gl-code-quality-report.json
+#     # and print linting issues to stdout in the format: path/to/file:line description
+#     # remove `--issues-exit-code 0` or set to non-zero to fail the job if linting issues are detected
+#     - golangci-lint run --issues-exit-code 0 --out-format code-climate | tee gl-code-quality-report.json | jq -r '.[] | "\(.location.path):\(.location.lines.begin) \(.description)"'
+#   artifacts:
+#     reports:
+#       codequality: gl-code-quality-report.json
+#     paths:
+#       - gl-code-quality-report.json
+
 jobs:
-  golangci:
-    name: lint
-    runs-on: ubuntu-latest
+  build:
+    container: golang:1.13.1
     steps:
-      - uses: actions/checkout@v2
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
-        with:
-          # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
-          version: v1.29
+      - run: go build -o main main.go
+    with:
+      name: build
+      path: main
+    variables:
+      CGO_ENABLED: 0
 
-          # Optional: working directory, useful for monorepos
-          # working-directory: somedir
+  publish:
+    container: gcr.io/kaniko-project/executor:debug
+      entrypoint: [""]
+    steps:
+      - run: echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+      - run: /kaniko/executor --context $CI_PROJECT_DIR --dockerfile ./Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --destination $CI_REGISTRY_IMAGE:latest
+    needs: [build]
 
-          # Optional: golangci-lint command line arguments.
-          # args: --issues-exit-code=0
 
-          # Optional: show only new issues if it's a pull request. The default value is `false`.
-          # only-new-issues: true
+  deploy-dev:
+    container: golang:1.13.1
+    steps:
+      - run: GOBIN=$(pwd)/ GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3
+      - run: mv kustomize /usr/local/bin/
+      - run: cd deployment/dev
+      - run: kustomize edit set image $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+      - run: cat kustomization.yaml
 
-          # Optional: if set to true then the action will use pre-installed Go.
-          # skip-go-installation: true
 
-          # Optional: if set to true then the action don't cache or restore ~/go/pkg.
-          # skip-pkg-cache: true
-
-          # Optional: if set to true then the action don't cache or restore ~/.cache/go-build.
-          # skip-build-cache: true
+  deploy-prod:
+    container: alpine:3.8
+    steps:
+      - run: apk add --no-cache git curl bash
+      - run: curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+      - run: mv kustomize /usr/local/bin/
+      - run: git remote set-url origin https://${CI_USERNAME}:${CI_PUSH_TOKEN}@192.168.108.46:8081/root/cicd-test.git
+      - run: git config --global user.email "mistersoh@naver.com"
+      - run: git config --global user.name "WWSOH"
+      - run: git checkout -B master
+      - run: git pull origin master
+      - run: cd deployment/prod
+      - run: kustomize edit set image $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+      - run: cat kustomization.yaml
+      - run: git commit -am '[skip ci] PROD image update'
+      - run: git push origin master
+    on:
+      workflow_dispatch:
+      inputs:
+         logLevel:
+            description: 'Log level'     
+            required: true
+            default: 'warning'
+         tags:
+            description: 'Test scenario tags'
